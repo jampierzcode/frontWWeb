@@ -7,9 +7,19 @@ const WhatsAppBot = () => {
   const [qrCode, setQrCode] = useState(null);
   const [sessionStatus, setSessionStatus] = useState("No conectado");
   const [backendStatus, setBackendStatus] = useState("Esperando conexión...");
+  const [clientId, setClientId] = useState(() => {
+    // Recuperar clientId de sessionStorage al iniciar el componente
+    return sessionStorage.getItem("clientId") || null;
+  });
 
   // Escuchar eventos de Socket.io
   useEffect(() => {
+    const clientId = sessionStorage.getItem("clientId");
+
+    if (clientId) {
+      // Si ya hay un clientId en sessionStorage, reconectar
+      socket.emit("reconnect-client", clientId);
+    }
     // Escuchar el evento de conexión al backend
     socket.on("connected", (message) => {
       setBackendStatus(message);
@@ -17,21 +27,29 @@ const WhatsAppBot = () => {
     });
 
     // Escuchar el evento de código QR
-    socket.on("qr", (qr) => {
-      setQrCode(qr);
-      setSessionStatus("Escanea el QR");
+    socket.on("qr", ({ clientId, url }) => {
+      if (clientId === sessionStorage.getItem("clientId")) {
+        // Verificar que el QR corresponde al clientId
+        setQrCode(url);
+        setSessionStatus("Escanea el QR");
+      }
     });
 
     // Escuchar cuando la sesión está lista
-    socket.on("ready", () => {
-      setSessionStatus("Conectado");
-      setQrCode(null); // Limpiamos el QR una vez conectado
+    socket.on("ready", ({ clientId }) => {
+      if (clientId === sessionStorage.getItem("clientId")) {
+        // Verificar que la sesión corresponde al clientId
+        setSessionStatus("Conectado");
+        setQrCode(null); // Limpiamos el QR una vez conectado
+      }
     });
 
     // Escuchar cuando la sesión se desconecta
-    socket.on("disconnected", () => {
-      setSessionStatus("Desconectado");
-      // Opción para regenerar el QR
+    socket.on("disconnected", ({ clientId }) => {
+      if (clientId === sessionStorage.getItem("clientId")) {
+        // Verificar que la desconexión corresponde al clientId
+        setSessionStatus("Desconectado");
+      }
     });
 
     return () => {
@@ -43,7 +61,12 @@ const WhatsAppBot = () => {
   }, []);
 
   const handleRequestQr = async () => {
-    socket.emit("request-qr");
+    if (!clientId) {
+      const newClientId = Date.now().toString(); // Generar un nuevo clientId único
+      setClientId(newClientId);
+      sessionStorage.setItem("clientId", newClientId); // Guardar el clientId en sessionStorage
+    }
+    socket.emit("request-qr", sessionStorage.getItem("clientId"));
   };
 
   return (
