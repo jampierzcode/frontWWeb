@@ -47,6 +47,7 @@ const WhatsAppBot = () => {
     // Escuchar cuando la sesión se desconecta
     socket.on("disconnected", ({ clientId }) => {
       if (clientId === sessionStorage.getItem("clientId")) {
+        sessionStorage.removeItem("clientId");
         // Verificar que la desconexión corresponde al clientId
         setSessionStatus("Desconectado");
       }
@@ -68,6 +69,13 @@ const WhatsAppBot = () => {
     }
     socket.emit("request-qr", sessionStorage.getItem("clientId"));
   };
+  // Nueva función para desconectar el cliente
+  const handleDisconnectClient = () => {
+    const clientId = sessionStorage.getItem("clientId");
+    if (clientId) {
+      socket.emit("disconnect-client", clientId); // Emitir evento para desconectar el cliente
+    }
+  };
 
   return (
     <div>
@@ -88,6 +96,10 @@ const WhatsAppBot = () => {
 
       {sessionStatus === "Desconectado" && (
         <button onClick={handleRequestQr}>Regenerar Código QR</button>
+      )}
+
+      {sessionStatus === "Conectado" && (
+        <button onClick={handleDisconnectClient}>Desconectar Cliente</button>
       )}
     </div>
   );
