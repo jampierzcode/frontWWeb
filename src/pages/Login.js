@@ -1,28 +1,26 @@
-import axios from "axios";
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../auth/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const { login, user } = useContext(AuthContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard"); // Redirigir si ya está autenticado
+    }
+  }, [user, navigate]);
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    e.preventDefault();
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/login`,
-        {
-          email,
-          password,
-        }
-      );
-      const { token, user } = response.data;
-      // Guardar token en localStorage
-      localStorage.setItem("token", token);
-      console.log("Datos del usuario:", user);
-      window.location.href = "/dashboard";
-    } catch (error) {
-      setError("Credenciales incorrectas");
+      await login(email, password);
+    } catch (err) {
+      setError("Invalid credentials");
     }
   };
 
