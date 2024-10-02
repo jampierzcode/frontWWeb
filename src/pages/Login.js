@@ -15,8 +15,6 @@ const Login = () => {
   }, [user, navigate]);
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    e.preventDefault();
     try {
       await login(email, password);
     } catch (err) {
