@@ -18,11 +18,9 @@ const AuthProvider = ({ children }) => {
     const validateToken = async () => {
       if (token) {
         try {
-          const response = await axios.post(
-            `${process.env.REACT_APP_API_URL}/verify-token`,
-            { token }
-          );
-          console.log(response);
+          await axios.post(`${process.env.REACT_APP_API_URL}/verify-token`, {
+            token,
+          });
         } catch (error) {
           setToken(null);
           setUser(null);

@@ -1,10 +1,10 @@
 // src/components/ProtectedRoute.js
 import React, { useContext, useEffect } from "react";
-import { Route, Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AuthContext } from "./AuthContext";
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading, hasPermission } = useContext(AuthContext);
+  const { loading } = useContext(AuthContext);
   const navigate = useNavigate();
   const token = sessionStorage.getItem("token");
   useEffect(() => {
