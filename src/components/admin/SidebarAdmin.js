@@ -20,7 +20,7 @@ const SidebarAdmin = ({ showMenu, setShowMenu }) => {
     {
       title: (
         <div className="flex items-center gap-2">
-          WhatsAppBot BsRobot{" "}
+          WhatsAppBot
           <MdWifi className={`text-xl ${showMenu ? "w-max" : "wfull"}`} />
         </div>
       ),
@@ -40,7 +40,7 @@ const SidebarAdmin = ({ showMenu, setShowMenu }) => {
   return (
     <div
       className={`${
-        showMenu ? "max-w-[300px]" : "max-w-[96px]"
+        showMenu ? "max-w-[96px] md:max-w-[300px]" : "max-w-0 md:max-w-[96px]"
       } w-full bg-main shadow h-svh absolute`}
     >
       <div id="header" className="py-14">

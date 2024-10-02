@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext, useRef } from "react";
 import { FaEllipsisV } from "react-icons/fa";
 import { AuthContext } from "../auth/AuthContext";
 import { io } from "socket.io-client";
-import { IoEllipseSharp } from "react-icons/io5";
 
 const Bot = () => {
   const [qrCode, setQrCode] = useState(null);
@@ -18,10 +17,9 @@ const Bot = () => {
   var socket = useRef();
 
   useEffect(() => {
-    const clientId = sessionStorage.getItem("clientId");
     // Conectar el socket al montar el componente
     socket.current = io("http://localhost:3001"); // Cambia a la URL de tu servidor de sockets
-    socket.current.emit("destroy-client", clientId);
+    // socket.current.emit("destroy-client", clientId);
     // Desconectar el socket cuando el componente se desmonte
     return () => {
       socket.current.disconnect();
@@ -31,9 +29,6 @@ const Bot = () => {
   // Escuchar eventos de Socket.current.io
   useEffect(() => {
     if (socket.current) {
-      console.log("cambio");
-      const clientId = sessionStorage.getItem("clientId");
-
       if (clientId) {
         // Si ya hay un clientId en sessionStorage, reconectar
         socket.current.emit("reconnect-client", clientId);
@@ -47,25 +42,26 @@ const Bot = () => {
       // Escuchar el evento de código QR
       socket.current.on("qr", ({ clientId, url }) => {
         console.log(clientId);
-        if (clientId === sessionStorage.getItem("clientId")) {
-          // Verificar que el QR corresponde al clientId
-          setQrCode(url);
-          setSessionStatus("Escanea el QR");
-        }
+        // Verificar que el QR corresponde al clientId
+        setQrCode(url);
+        setSessionStatus("Escanea el QR");
       });
       // Escuchar cuando el cliente se está conectando después de escanear el QR
       socket.current.on("connecting", ({ clientId }) => {
-        if (clientId === sessionStorage.getItem("clientId")) {
-          setSessionStatus("Conectando..."); // Mostrar que se está conectando
-        }
+        setSessionStatus("Conectando..."); // Mostrar que se está conectando
       });
       // Escuchar cuando la sesión está lista
       socket.current.on("ready", ({ clientId }) => {
-        if (clientId === sessionStorage.getItem("clientId")) {
-          // Verificar que la sesión corresponde al clientId
-          setSessionStatus("Conectado");
-          setQrCode(null); // Limpiamos el QR una vez conectado
-        }
+        sessionStorage.setItem("clientId", clientId); // Guardar el clientId en sessionStorage
+        setClientId(clientId);
+        setSessionStatus("Conectado");
+        setQrCode(null);
+
+        // if (clientId === sessionStorage.getItem("clientId")) {
+        //   // Verificar que la sesión corresponde al clientId
+        //   setSessionStatus("Conectado");
+        //   setQrCode(null); // Limpiamos el QR una vez conectado
+        // }
       });
 
       // Escuchar cuando la sesión se desconecta
@@ -88,16 +84,16 @@ const Bot = () => {
     } else {
       console.log("sockect no conectado");
     }
-  }, [socket]);
+  }, [socket, clientId]);
 
   const handleRequestQr = async () => {
-    if (!clientId) {
-      setSessionStatus("Solicitando");
-      const newClientId = user?.celular; // Generar un nuevo clientId único
-      setClientId(newClientId);
-      sessionStorage.setItem("clientId", newClientId); // Guardar el clientId en sessionStorage
-    }
-    socket.current.emit("request-qr", sessionStorage.getItem("clientId"));
+    // if (!clientId) {
+    setSessionStatus("Solicitando");
+    const newClientId = user?.celular; // Generar un nuevo clientId único
+
+    //   sessionStorage.setItem("clientId", newClientId); // Guardar el clientId en sessionStorage
+    // }
+    socket.current.emit("request-qr", newClientId);
   };
   // Nueva función para desconectar el cliente
   const handleDisconnectClient = () => {
@@ -110,7 +106,7 @@ const Bot = () => {
   return (
     <div className="bg-gray-300">
       <div className="w-full p-8 bg-white shadow rounded">
-        <div className="flex gap-8 w-full items-center">
+        <div className="flex flex-col md:flex-row gap-8 w-full items-center">
           <div className="content">
             <h1 className="text-2xl font-bold mb-4 text-main">
               ¡Conecta tu chatBot de Whatsapp <br /> desde una computadora!
@@ -122,9 +118,9 @@ const Bot = () => {
               </li>
               <li className="flex gap-4">
                 <span className="text-blue-700 font-bold">2.</span>
-                <p className="text-sm flex gap-2">
+                <p className="text-sm">
                   Toca <b>Menu</b>{" "}
-                  <span className="p-1 text-sm rounded bg-gray-100">
+                  <span className="inline-block align-center p-1 text-sm rounded bg-gray-100">
                     <FaEllipsisV />{" "}
                   </span>
                   , selecciona <b>Dispositivos Vinculados</b> y toca{" "}
@@ -173,7 +169,7 @@ const Bot = () => {
               <p className="mb-4 text-sm">
                 Estado de la sesión:{" "}
                 <span
-                  className={`bg-white p-2 whitespace-nowrap rounded-full font-bold text-sm ${
+                  className={`bg-white p-2 inline-block whitespace-nowrap rounded-full font-bold text-sm ${
                     sessionStatus === "No conectado"
                       ? "text-red-600"
                       : "text-green-600"
