@@ -18,7 +18,7 @@ const Bot = () => {
 
   useEffect(() => {
     // Conectar el socket al montar el componente
-    socket.current = io("http://localhost:3001"); // Cambia a la URL de tu servidor de sockets
+    socket.current = io(`${process.env.REACT_APP_API_URL}`); // Cambia a la URL de tu servidor de sockets
     // socket.current.emit("destroy-client", clientId);
     // Desconectar el socket cuando el componente se desmonte
     return () => {
